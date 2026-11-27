@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mutabaah Tahfidz — Laporan Hafalan</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div>
+        <h1>Mutabaah Tahfidz</h1>
+        <p class="subtitle">Catatan Ziyadah &amp; Muraja'ah Harian</p>
+      </div>
+
+      <nav class="navbar" aria-label="Navigasi Utama">
+        <button type="button" class="nav-link active" data-tab="dashboard">Dashboard</button>
+        <button type="button" class="nav-link" data-tab="hafalan">Hafalan</button>
+        <button type="button" class="nav-link" data-tab="evaluasi">Evaluasi</button>
+        <button type="button" class="nav-link" data-tab="profil">Profil</button>
+      </nav>
+
+      <div class="topbar-actions">
+        <span id="syncStatus" class="badge badge-offline">Mode Lokal</span>
+        <button type="button" id="btnOpenSettings" class="btn btn-outline">⚙️ Koneksi API</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ==================== 1. DASHBOARD ==================== -->
+    <section id="tab-dashboard" class="tab-panel active">
+      <div class="stats-grid">
+        <div class="card stat-card">
+          <span class="stat-label">Total Ziyadah</span>
+          <strong id="statZiyadah" class="stat-value">0 Hal</strong>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">Total Muraja'ah</span>
+          <strong id="statMurajaah" class="stat-value">0 Hal</strong>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">Estimasi Capaian</span>
+          <strong id="statJuz" class="stat-value">0.00 Juz</strong>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-label">Total Setoran</span>
+          <strong id="statCount" class="stat-value">0 Kali</strong>
+        </div>
+      </div>
+
+      <div class="main-layout">
+        <!-- Form Input Setoran -->
+        <div class="card form-section">
+          <h2 id="formTitle">Tambah Setoran Hafalan</h2>
+          <form id="hafalanForm">
+            <input type="hidden" id="recordId" />
+
+            <div class="form-group">
+              <label for="tanggal">Tanggal</label>
+              <input type="date" id="tanggal" required />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="jenis">Jenis Setoran</label>
+                <select id="jenis" required>
+                  <option value="Ziyadah">Ziyadah (Hafalan Baru)</option>
+                  <option value="Muraja'ah">Muraja'ah (Mengulang)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="juz">Juz</label>
+                <input type="number" id="juz" min="1" max="30" placeholder="1 - 30" required />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="surah">Nama Surah</label>
+              <input type="text" id="surah" placeholder="Contoh: Al-Mulk" required />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ayat">Ayat</label>
+                <input type="text" id="ayat" placeholder="Contoh: 1 - 15" required />
+              </div>
+              <div class="form-group">
+                <label for="halaman">Jumlah Halaman</label>
+                <input type="number" id="halaman" step="0.5" min="0.5" placeholder="Contoh: 1.5" required />
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="predikat">Predikat</label>
+                <select id="predikat" required>
+                  <option value="Mumtaz (Lancar)">Mumtaz (Lancar)</option>
+                  <option value="Jayyid Jiddan">Jayyid Jiddan</option>
+                  <option value="Jayyid">Jayyid</option>
+                  <option value="Perlu Pengulangan">Perlu Pengulangan</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="musyrif">Musyrif / Penyimak</label>
+                <input type="text" id="musyrif" placeholder="Nama Ustadz/Teman" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="catatan">Catatan Tajwid / Evaluasi</label>
+              <textarea id="catatan" rows="2" placeholder="Opsional..."></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" id="btnSubmit" class="btn btn-primary">Simpan Setoran</button>
+              <button type="button" id="btnCancelEdit" class="btn btn-secondary hidden">Batal Edit</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tabel Riwayat Setoran -->
+        <div class="card table-section">
+          <div class="table-header">
+            <h2>Riwayat Setoran</h2>
+            <select id="filterJenis">
+              <option value="ALL">Semua Jenis</option>
+              <option value="Ziyadah">Ziyadah</option>
+              <option value="Muraja'ah">Muraja'ah</option>
+            </select>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Jenis</th>
+                  <th>Juz / Surah</th>
+                  <th>Hal</th>
+                  <th>Predikat</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="hafalanTableBody">
+                <tr>
+                  <td colspan="6" class="empty-state">Belum ada data setoran.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. HAFALAN ==================== -->
+    <section id="tab-hafalan" class="tab-panel">
+      <div class="card">
+        <div class="table-header">
+          <div>
+            <h2>Rekap Seluruh Hafalan &amp; Muraja'ah</h2>
+            <p class="section-desc">Daftar lengkap seluruh setoran ziyadah maupun muraja'ah yang telah tercatat.</p>
+          </div>
+          <div class="filter-group">
+            <select id="hafalanFilterJenis">
+              <option value="ALL">Semua Setoran</option>
+              <option value="Ziyadah">Hanya Ziyadah</option>
+              <option value="Muraja'ah">Hanya Muraja'ah</option>
+            </select>
+            <input type="text" id="hafalanSearch" placeholder="Cari surah / juz..." />
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Jenis</th>
+                <th>Juz</th>
+                <th>Surah &amp; Ayat</th>
+                <th>Halaman</th>
+                <th>Predikat</th>
+                <th>Musyrif</th>
+              </tr>
+            </thead>
+            <tbody id="allHafalanBody">
+              <tr>
+                <td colspan="7" class="empty-state">Belum ada data hafalan.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 3. EVALUASI ==================== -->
+    <section id="tab-evaluasi" class="tab-panel">
+      <div class="card">
+        <div class="table-header">
+          <div>
+            <h2>Catatan Evaluasi &amp; Tajwid</h2>
+            <p class="section-desc">Kumpulan catatan koreksi tajwid, kelancaran, dan evaluasi dari setiap setoran.</p>
+          </div>
+        </div>
+        <div id="evaluasiList" class="eval-list">
+          <p class="empty-state">Belum ada catatan evaluasi.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. PROFIL ==================== -->
+    <section id="tab-profil" class="tab-panel">
+      <div class="profile-grid">
+        <!-- Data Pribadi & Motivasi -->
+        <div class="card">
+          <h2>Data Pribadi</h2>
+          <div class="profile-info">
+            <div class="info-row"><span>Nama</span><strong>Ahmad Afifi</strong></div>
+            <div class="info-row"><span>Alias</span><strong>Afifi</strong></div>
+            <div class="info-row"><span>Program Studi</span><strong>Teknik Informatika (STT NF)</strong></div>
+            <div class="info-row"><span>Total Halaman Tercatat</span><strong id="profileTotalHal">0 Hal</strong></div>
+          </div>
+
+          <div class="motivation-box">
+            <h3>Motivasi Menghafal</h3>
+            <blockquote>
+              "Rawat hafalan seperti merawat pohon berbuah—akar yang kokoh dan konsisten akan menumbuhkan keberkahan dari setiap ayat yang dijaga."
+            </blockquote>
+            <p class="quote-sub">Istiqomah sedikit demi sedikit jauh lebih kuat daripada berhenti setelah terburu-buru.</p>
+          </div>
+        </div>
+
+        <!-- Diagram Lingkaran Persen Kelancaran & Hafalan -->
+        <div class="card">
+          <h2>Diagram Kelancaran &amp; Hafalan</h2>
+          <p class="section-desc">Persentase komposisi setoran dan tingkat kelancaran hafalan.</p>
+
+          <div class="donut-grid">
+            <div class="donut-item">
+              <div class="donut-ring" id="donutHafalan" style="--pct: 0%; --ring-color: #0f766e;">
+                <div class="donut-hole">
+                  <strong id="pctZiyadahText">0%</strong>
+                  <span>Ziyadah</span>
+                </div>
+              </div>
+              <p class="donut-caption" id="compSummary">0 Ziyadah • 0 Muraja'ah</p>
+            </div>
+
+            <div class="donut-item">
+              <div class="donut-ring" id="donutKelancaran" style="--pct: 0%; --ring-color: #0284c7;">
+                <div class="donut-hole">
+                  <strong id="pctLancText">0%</strong>
+                  <span>Mumtaz</span>
+                </div>
+              </div>
+              <p class="donut-caption" id="lancSummary">0 dari 0 setoran Mumtaz</p>
+            </div>
+          </div>
+
+          <div id="fluencyChart" class="fluency-breakdown"></div>
+        </div>
+      </div>
+
+      <!-- Hafalan yang Sudah Disetorkan -->
+      <div class="card" style="margin-top: 20px;">
+        <h2>Hafalan yang Sudah Disetorkan</h2>
+        <div id="submittedHafalanTags" class="tag-cloud">
+          <span class="empty-state">Belum ada hafalan yang disetorkan.</span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Pengaturan URL Google Apps Script -->
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Koneksi Database Google Sheets</h3>
+        <button type="button" id="btnCloseSettings" class="btn-icon">✕</button>
+      </div>
+      <p class="modal-desc">
+        Tempel URL Web App dari Google Apps Script (berakhiran <code>/exec</code>). Kosongkan jika ingin memakai penyimpanan lokal browser.
+      </p>
+      <div class="form-group">
+        <label for="apiUrlInput">URL Web App Google Apps Script</label>
+        <input type="url" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec" />
+      </div>
+      <div class="form-actions">
+        <button type="button" id="btnSaveApi" class="btn btn-primary">Simpan &amp; Sinkronkan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
